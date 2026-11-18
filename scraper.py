@@ -1,6 +1,5 @@
 import json
 import os
-import re
 from datetime import datetime
 from urllib.parse import quote
 from playwright.sync_api import sync_playwright
@@ -37,31 +36,25 @@ def run_scraper():
     seen_ids = set()
 
     with sync_playwright() as p:
-        browser = p.chromium.launch(
-            headless=True,
-            args=["--disable-blink-features=AutomationControlled", "--no-sandbox"]
-        )
+        browser = p.chromium.launch(headless=True)
         context = browser.new_context(
             user_agent="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36",
             viewport={"width": 1366, "height": 768},
             locale="zh-TW"
         )
-        context.add_init_script("Object.defineProperty(navigator, 'webdriver', {get: () => undefined})")
         page = context.new_page()
 
         for cat_name, keyword in CATEGORIES.items():
             url = f"https://etmall.com.tw{quote(keyword)}"
             try:
-                page.goto(url, wait_until="networkidle", timeout=45000)
+                page.goto(url, wait_until="domcontentloaded", timeout=30000)
                 page.wait_for_timeout(3000)
+                print(f"[{cat_name}] 標題: {page.title()}")
 
-                title = page.title()
-                print(f"[{cat_name}] 網頁標題: {title}")
-
-                pickup = page.locator("label:has-text('超商取貨'), span:has-text('超商取貨'), a:has-text('超商取貨')").first
+                pickup = page.locator("text=超商取貨").first
                 if pickup.count() > 0 and pickup.is_visible():
                     pickup.click()
-                    page.wait_for_timeout(3000)
+                    page.wait_for_timeout(2500)
 
                 for _ in range(3):
                     page.mouse.wheel(0, 1200)
@@ -77,7 +70,7 @@ def run_scraper():
                         const id = m[1];
                         if (seen.has(id)) return;
                         let card = a.parentElement;
-                        for (let i = 0; i < 5; i++) {
+                        for (let i = 0; i < 6; i++) {
                             if (card && card.innerText && card.innerText.includes('$')) break;
                             if (card) card = card.parentElement;
                         }
