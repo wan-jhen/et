@@ -1,0 +1,289 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ETMall - 東森購物超取特價商品</title>
+    <style>
+        :root {
+            --primary: #d92626;
+            --bg: #f8f9fa;
+            --border: #dee2e6;
+            --text: #212529;
+            --muted: #6c757d;
+        }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            background-color: var(--bg);
+            color: var(--text);
+            margin: 0;
+            padding: 20px;
+        }
+        .container {
+            max-width: 1300px;
+            margin: 0 auto;
+            background: #fff;
+            padding: 25px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+        }
+        h1 {
+            margin-top: 0;
+            font-size: 1.8rem;
+            color: var(--primary);
+        }
+        .meta-info {
+            color: var(--muted);
+            font-size: 0.9rem;
+            margin-bottom: 15px;
+        }
+        .controls {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 15px;
+            margin-bottom: 15px;
+            align-items: center;
+            background: #f1f3f5;
+            padding: 15px;
+            border-radius: 8px;
+        }
+        .control-group {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        input[type="text"], input[type="number"] {
+            padding: 8px 12px;
+            border: 1px solid #ced4da;
+            border-radius: 6px;
+            font-size: 0.95rem;
+        }
+        input[type="number"] { width: 70px; }
+        .category-box {
+            margin-bottom: 20px;
+            padding: 15px;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+        }
+        .category-header {
+            margin-bottom: 10px;
+            font-weight: bold;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .btn-sm {
+            padding: 4px 10px;
+            font-size: 0.85rem;
+            cursor: pointer;
+            border: 1px solid #adb5bd;
+            background: #fff;
+            border-radius: 4px;
+        }
+        .btn-sm:hover { background: #e9ecef; }
+        .category-list {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 12px;
+        }
+        .category-item {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            font-size: 0.9rem;
+            cursor: pointer;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 10px;
+        }
+        th, td {
+            padding: 12px 10px;
+            border-bottom: 1px solid var(--border);
+            text-align: left;
+            vertical-align: middle;
+        }
+        th {
+            background-color: #f1f3f5;
+            cursor: pointer;
+            user-select: none;
+            white-space: nowrap;
+        }
+        th:hover { background-color: #e9ecef; }
+        .thumb {
+            width: 60px;
+            height: 60px;
+            object-fit: cover;
+            border-radius: 6px;
+            border: 1px solid #eee;
+        }
+        .badge-new {
+            background: #28a745;
+            color: #fff;
+            font-size: 0.75rem;
+            padding: 2px 6px;
+            border-radius: 4px;
+            margin-right: 5px;
+        }
+        .badge-pickup {
+            background: #007bff;
+            color: #fff;
+            font-size: 0.75rem;
+            padding: 2px 6px;
+            border-radius: 4px;
+            margin-right: 5px;
+        }
+        .discount {
+            color: var(--primary);
+            font-weight: bold;
+        }
+        .price-now {
+            font-weight: bold;
+            font-size: 1.05rem;
+        }
+        .price-orig {
+            text-decoration: line-through;
+            color: var(--muted);
+            font-size: 0.9rem;
+        }
+        .diff-down { color: #28a745; font-size: 0.85rem; font-weight: bold; }
+        .diff-up { color: #dc3545; font-size: 0.85rem; }
+        .btn-buy {
+            display: inline-block;
+            padding: 6px 12px;
+            background: var(--primary);
+            color: #fff;
+            text-decoration: none;
+            border-radius: 5px;
+            font-size: 0.85rem;
+            white-space: nowrap;
+        }
+        .btn-buy:hover { background: #b51d1d; }
+        .out-of-stock { color: var(--muted); font-weight: bold; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h1>🛍️ ETMall 東森購物 - 全站可超取特價商品</h1>
+    <div class="meta-info">
+        僅顯示支援超商取貨之特價商品 ｜ 更新時間：<span id="updateTime">載入中...</span> ｜ 共 <span id="totalCount">0</span> 件商品
+    </div>
+
+    <div class="controls">
+        <div class="control-group">
+            <label for="searchInput">🔍 搜尋品名：</label>
+            <input type="text" id="searchInput" placeholder="輸入關鍵字...">
+        </div>
+        <div class="control-group">
+            <label for="minDiscount">最低折扣 (%)：</label>
+            <input type="number" id="minDiscount" value="1" min="0" max="99">
+        </div>
+        <div class="control-group">
+            <label><input type="checkbox" id="hideOutOfStock"> 隱藏缺貨商品</label>
+        </div>
+    </div>
+
+    <div class="category-box">
+        <div class="category-header">
+            <span>📂 篩選分類：</span>
+            <button class="btn-sm" onclick="toggleAllCategories(true)">全選分類</button>
+            <button class="btn-sm" onclick="toggleAllCategories(false)">全部取消</button>
+        </div>
+        <div class="category-list" id="categoryList"></div>
+    </div>
+
+    <div style="overflow-x: auto;">
+        <table>
+            <thead>
+                <tr>
+                    <th>縮圖</th>
+                    <th onclick="sortBy('category')">分類 ↕</th>
+                    <th onclick="sortBy('name')">品名 ↕</th>
+                    <th onclick="sortBy('origPrice')">原價 ↕</th>
+                    <th onclick="sortBy('discount')">折扣率 ▼</th>
+                    <th onclick="sortBy('price')">現在價格 ↕</th>
+                    <th onclick="sortBy('diff')">與前次比價 ↕</th>
+                    <th>連結</th>
+                </tr>
+            </thead>
+            <tbody id="productTable"></tbody>
+        </table>
+    </div>
+</div>
+
+<script>
+    const CATEGORIES = ["美妝保養", "保健醫療", "食品飲料", "手機相機", "電腦3C", "家電數位", "生活日用", "餐廚衛浴", "流行服飾", "鞋包精品", "母嬰寵物", "運動戶外"];
+    let allProducts = [];
+    let currentSort = { key: 'discount', asc: false };
+
+    // 內建預設測試資料 (當尚未執行爬蟲產生 products.json 時顯示)
+    const FALLBACK_DATA = {
+        updatedAt: "測試模式 (請執行 scraper.py 更新真實資料)",
+        products: [
+            { id: "1001", isNew: true, category: "保健醫療", name: "【東森嚴選】日本專利葉黃素膠囊 30顆/盒 (可超取)", origPrice: 1200, price: 399, discount: 67, diff: -100, diffPercent: -20.0, inStock: true, img: "https://placeholder.com", url: "https://etmall.com.tw" },
+            { id: "1002", isNew: false, category: "生活日用", name: "抽取式衛生紙 100抽x12包/串 (限超取一單一串)", origPrice: 299, price: 119, discount: 60, diff: 10, diffPercent: 9.2, inStock: true, img: "https://placeholder.com", url: "https://etmall.com.tw" },
+            { id: "1003", isNew: false, category: "手機相機", name: "PD 30W 氮化鎵雙孔迷你快充頭 (7-11/全家取貨)", origPrice: 590, price: 199, discount: 66, diff: 0, diffPercent: 0, inStock: false, img: "https://placeholder.com", url: "https://etmall.com.tw" }
+        ]
+    };
+
+    function initCategories() {
+        const container = document.getElementById('categoryList');
+        container.innerHTML = CATEGORIES.map(cat => `
+            <label class="category-item">
+                <input type="checkbox" class="cat-cb" value="${cat}" checked onchange="renderTable()"> ${cat}
+            </label>
+        `).join('');
+    }
+
+    function toggleAllCategories(checked) {
+        document.querySelectorAll('.cat-cb').forEach(cb => cb.checked = checked);
+        renderTable();
+    }
+
+    async function loadData() {
+        try {
+            const res = await fetch('products.json?t=' + Date.now());
+            if (!res.ok) throw new Error('No json');
+            const data = await res.json();
+            document.getElementById('updateTime').textContent = data.updatedAt;
+            allProducts = data.products;
+        } catch (e) {
+            document.getElementById('updateTime').textContent = FALLBACK_DATA.updatedAt;
+            allProducts = FALLBACK_DATA.products;
+        }
+        renderTable();
+    }
+
+    function sortBy(key) {
+        if (currentSort.key === key) {
+            currentSort.asc = !currentSort.asc;
+        } else {
+            currentSort.key = key;
+            currentSort.asc = (key === 'price' || key === 'origPrice');
+        }
+        renderTable();
+    }
+
+    function renderTable() {
+        const keyword = document.getElementById('searchInput').value.toLowerCase();
+        const minDisc = parseInt(document.getElementById('minDiscount').value) || 0;
+        const hideOOS = document.getElementById('hideOutOfStock').checked;
+        const checkedCats = Array.from(document.querySelectorAll('.cat-cb:checked')).map(cb => cb.value);
+
+        let filtered = allProducts.filter(p => {
+            if (!checkedCats.includes(p.category)) return false;
+            if (p.discount < minDisc) return false;
+            if (hideOOS && !p.inStock) return false;
+            if (keyword && !p.name.toLowerCase().includes(keyword)) return false;
+            return true;
+        });
+
+        filtered.sort((a, b) => {
+            let valA = a[currentSort.key];
+            let valB = b[currentSort.key];
+            if (typeof valA === 'string') return currentSort.asc ? valA.localeCompare(valB) : valB.localeCompare(valA);
+            return currentSort.asc ? valA - valB : valB - valA;
+        });
+
